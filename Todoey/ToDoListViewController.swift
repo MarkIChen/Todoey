@@ -11,10 +11,18 @@ import UIKit
 class ToDoListViewController: UITableViewController {
 
     var itemArrary = [String]()
+    let defaults = UserDefaults.standard
     
     override func viewDidLoad() {
         super.viewDidLoad()
         // the delegates are all handled by UITableViewController
+        
+        if let items = defaults.array(forKey: "ToDoListArray") as? [String] {
+            itemArrary = items
+        } else {
+            print("the reloading process is failed")
+        }
+        
     }
 
     //MARK: - TableView Datasource Methodes
@@ -61,6 +69,7 @@ class ToDoListViewController: UITableViewController {
             
             if let name = textField.text{
                 self.itemArrary.append(name)
+                self.defaults.set(self.itemArrary, forKey: "ToDoListArray")
                 self.tableView.reloadData()
             }else {
                 print("the item name is empty")
