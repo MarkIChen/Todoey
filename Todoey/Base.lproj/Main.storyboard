@@ -32,7 +32,14 @@
                             <outlet property="delegate" destination="g6A-FE-4gz" id="Cn3-tG-FRR"/>
                         </connections>
                     </tableView>
-                    <navigationItem key="navigationItem" title="Todoey" id="0iY-8Q-LRx"/>
+                    <navigationItem key="navigationItem" title="Todoey" id="0iY-8Q-LRx">
+                        <barButtonItem key="rightBarButtonItem" systemItem="add" id="NDf-5W-CRy">
+                            <color key="tintColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                            <connections>
+                                <action selector="addButtonPressed:" destination="g6A-FE-4gz" id="Ovz-IJ-wsZ"/>
+                            </connections>
+                        </barButtonItem>
+                    </navigationItem>
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="MYW-jL-w9l" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
@@ -46,7 +53,7 @@
                     <navigationBar key="navigationBar" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" id="Z23-sf-Gsx">
                         <rect key="frame" x="0.0" y="20" width="375" height="44"/>
                         <autoresizingMask key="autoresizingMask"/>
-                        <color key="barTintColor" red="0.50049293575944909" green="0.80827866856096375" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <color key="barTintColor" red="0.54302856356941775" green="0.73138478403941731" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <textAttributes key="titleTextAttributes">
                             <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                         </textAttributes>
