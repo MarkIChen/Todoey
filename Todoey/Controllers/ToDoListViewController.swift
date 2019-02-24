@@ -9,14 +9,18 @@
 import UIKit
 
 class ToDoListViewController: UITableViewController {
+    // the delegates are all handled by UITableViewController
 
+    
     var itemArrary = [Item]()
     let defaults = UserDefaults.standard
     
+    let dataPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Item.plist")
+    
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-        // the delegates are all handled by UITableViewController
-        
+        reStoreData()
         // problems occur as storing objects to default
 //        if let items = defaults.array(forKey: "ToDoListArray") as? [Item] {
 //            itemArrary = items
@@ -48,6 +52,7 @@ class ToDoListViewController: UITableViewController {
         let item = itemArrary[indexPath.row]
         item.done = !item.done
         
+        storeArray()
         tableView.deselectRow(at: indexPath, animated: true)
         tableView.reloadData()
 
@@ -71,19 +76,37 @@ class ToDoListViewController: UITableViewController {
             if let name = textField.text{
                 item.title = name
                 self.itemArrary.append(item)
-//                self.defaults.set(self.itemArrary, forKey: "ToDoListArray")
-                self.tableView.reloadData()
             }else {
                 print("the item name is empty")
             }
             
-            
+            self.storeArray()
+            self.tableView.reloadData()
         }
         alert.addAction(action)
         present(alert, animated: true, completion: nil)
     }
 
-    
-    
+    //MARK: - store and restore Data
+    func storeArray(){
+        
+        let encoder = PropertyListEncoder()
+        do {
+            let data = try encoder.encode(self.itemArrary)
+            try data.write(to: self.dataPath!)
+        } catch {
+            print("Something is wrong as storing array  \(error)")
+        }
+    }
+    func reStoreData(){
+        if let data = try? Data(contentsOf: dataPath!) {
+            do{
+                let decoder = PropertyListDecoder()
+                try itemArrary = decoder.decode([Item].self, from: data)
+            } catch {
+                print(error)
+            }
+        }
+    }
 }
 
