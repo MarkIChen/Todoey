@@ -7,27 +7,31 @@
 //
 
 import UIKit
+import CoreData
 
 class ToDoListViewController: UITableViewController {
     // the delegates are all handled by UITableViewController
 
+    @IBOutlet weak var searchBar: UISearchBar!
     
     var itemArrary = [Item]()
-    let defaults = UserDefaults.standard
+//    let defaults = UserDefaults.standard
     
     let dataPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Item.plist")
+    let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
     
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        reStoreData()
+        
+        loadData()
         // problems occur as storing objects to default
 //        if let items = defaults.array(forKey: "ToDoListArray") as? [Item] {
 //            itemArrary = items
 //        } else {
 //            print("the reloading process is failed")
 //        }
-        
+        print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
     }
 
     //MARK: - TableView Datasource Methodes
@@ -36,7 +40,7 @@ class ToDoListViewController: UITableViewController {
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        print("loading data")
+        
         let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell", for: indexPath)
         let item = itemArrary[indexPath.row]
         
@@ -71,7 +75,8 @@ class ToDoListViewController: UITableViewController {
         let action = UIAlertAction(title: "Add item", style: .default) { (action) in
             //what will hapeen if press the action alert
             
-            let item = Item()
+            let item = Item(context: self.context)
+            item.done = false
             
             if let name = textField.text{
                 item.title = name
@@ -90,23 +95,33 @@ class ToDoListViewController: UITableViewController {
     //MARK: - store and restore Data
     func storeArray(){
         
-        let encoder = PropertyListEncoder()
         do {
-            let data = try encoder.encode(self.itemArrary)
-            try data.write(to: self.dataPath!)
+            try context.save()
         } catch {
-            print("Something is wrong as storing array  \(error)")
+            print("Something is wrong as saving context  \(error)")
         }
     }
-    func reStoreData(){
-        if let data = try? Data(contentsOf: dataPath!) {
-            do{
-                let decoder = PropertyListDecoder()
-                try itemArrary = decoder.decode([Item].self, from: data)
-            } catch {
-                print(error)
-            }
+    func loadData(with request: NSFetchRequest<Item> = Item.fetchRequest()){
+        
+        do {
+            itemArrary = try context.fetch(request)
+        }catch {
+            print("Error fetching data from context  \(error)")
         }
+        tableView.reloadData()
+    }
+}
+
+//MARK: - SearchBar implement
+extension ToDoListViewController : UISearchBarDelegate{
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        let request : NSFetchRequest<Item> = Item.fetchRequest()
+        
+        request.predicate = NSPredicate(format: "title CONTAINS[c] %@", searchBar.text!)
+        
+        request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
+        
+        loadData(with: request)
     }
 }
 
