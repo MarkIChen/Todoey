@@ -15,23 +15,18 @@ class ToDoListViewController: UITableViewController {
     @IBOutlet weak var searchBar: UISearchBar!
     
     var itemArrary = [Item]()
-//    let defaults = UserDefaults.standard
-    
-    let dataPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Item.plist")
+
     let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+    
+    var selectedCategory : Category? {
+        didSet{
+            loadData()
+        }
+    }
     
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        loadData()
-        // problems occur as storing objects to default
-//        if let items = defaults.array(forKey: "ToDoListArray") as? [Item] {
-//            itemArrary = items
-//        } else {
-//            print("the reloading process is failed")
-//        }
-        print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
     }
 
     //MARK: - TableView Datasource Methodes
@@ -86,6 +81,7 @@ class ToDoListViewController: UITableViewController {
             }
             
             self.storeArray()
+            item.parentCategory = self.selectedCategory
             self.tableView.reloadData()
         }
         alert.addAction(action)
@@ -101,7 +97,15 @@ class ToDoListViewController: UITableViewController {
             print("Something is wrong as saving context  \(error)")
         }
     }
-    func loadData(with request: NSFetchRequest<Item> = Item.fetchRequest()){
+    func loadData(with request: NSFetchRequest<Item> = Item.fetchRequest(), predict : NSPredicate? = nil){
+        
+        let categoryPredict = NSPredicate(format: "parentCategory.name MATCHES %@", selectedCategory!.name!)
+        
+        if let additionalPreicate = predict {
+            request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [categoryPredict, additionalPreicate])
+        } else{
+            request.predicate = categoryPredict
+        }
         
         do {
             itemArrary = try context.fetch(request)
@@ -117,11 +121,19 @@ extension ToDoListViewController : UISearchBarDelegate{
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
         let request : NSFetchRequest<Item> = Item.fetchRequest()
         
-        request.predicate = NSPredicate(format: "title CONTAINS[c] %@", searchBar.text!)
-        
+        let predict = NSPredicate(format: "title CONTAINS[c] %@", searchBar.text!)
         request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
         
-        loadData(with: request)
+        loadData(with: request, predict: predict)
+    }
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        if searchBar.text?.count == 0 {
+            loadData()
+            
+            DispatchQueue.main.async {
+                searchBar.resignFirstResponder()
+            }
+        }
     }
 }
 
