@@ -7,53 +7,52 @@
 //
 
 import UIKit
-import CoreData
+import RealmSwift
 
 class CategoryViewController: UITableViewController {
 
-    var categoryArray = [Category]()
+    let realm = try! Realm()
+    var categoryArray: Results<Category>?
     let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
     
     override func viewDidLoad() {
         super.viewDidLoad()
         loadData()
-       
     }
 
     //MARK: - TableView Datasource Methods
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return categoryArray.count
+        return categoryArray?.count ?? 1
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
         let cell = tableView.dequeueReusableCell(withIdentifier: "category", for: indexPath)
         
-        cell.textLabel?.text = categoryArray[indexPath.row].name
+        cell.textLabel?.text = categoryArray?[indexPath.row].name ?? "No category added yet"
         
         return cell
     }
-    
+
     
     //MARK: - Data Manipulate Methods
     
-    func storeData(){
+    func storeData(category: Category){
         do{
-            try context.save()
+            try realm.write {
+                realm.add(category)
+            }
         } catch {
             print("Error as saving data \(error)")
         }
     }
     
-    func loadData(with request : NSFetchRequest<Category> = Category.fetchRequest()){
+    func loadData(){
+
+        categoryArray = realm.objects(Category.self)
         
-        do{
-            categoryArray =  try context.fetch(request)
-            
-        }catch{
-            print("Error as loading data \(error)")
-        }
+        
         tableView.reloadData()
     }
     
@@ -69,12 +68,11 @@ class CategoryViewController: UITableViewController {
         }
         
         let action = UIAlertAction(title: "Add", style: .default) { (alert) in
-            let category = Category(context: self.context)
+            let newCategory = Category()
             
-            category.name = categoryName.text
+            newCategory.name = categoryName.text!
             
-            self.categoryArray.append(category)
-            self.storeData()
+            self.storeData(category: newCategory)
             self.tableView.reloadData()
         }
         
@@ -94,7 +92,7 @@ class CategoryViewController: UITableViewController {
         let destinationVC = segue.destination as! ToDoListViewController
         
         if let indexPath = tableView.indexPathForSelectedRow {
-            destinationVC.selectedCategory = categoryArray[indexPath.row]
+            destinationVC.selectedCategory = categoryArray?[indexPath.row]
         }
         
     }
