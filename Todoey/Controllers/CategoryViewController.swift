@@ -8,18 +8,20 @@
 
 import UIKit
 import RealmSwift
+import ChameleonFramework
 
-class CategoryViewController: UITableViewController {
+class CategoryViewController: SwipeTableViewController {
 
     let realm = try! Realm()
     var categoryArray: Results<Category>?
-    let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
     
     override func viewDidLoad() {
         super.viewDidLoad()
         loadData()
+//        tableView.rowHeight = 80
     }
 
+    
     //MARK: - TableView Datasource Methods
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -28,9 +30,13 @@ class CategoryViewController: UITableViewController {
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
-        let cell = tableView.dequeueReusableCell(withIdentifier: "category", for: indexPath)
-        
+        let cell = super.tableView(tableView, cellForRowAt: indexPath)
         cell.textLabel?.text = categoryArray?[indexPath.row].name ?? "No category added yet"
+        
+        cell.backgroundColor = UIColor(hexString: categoryArray?[indexPath.row].colour ?? "FFFFFF") 
+     
+        guard let hexColour = cell.backgroundColor else{ fatalError() }
+        cell.textLabel?.textColor = ContrastColorOf(hexColour, returnFlat: true)
         
         return cell
     }
@@ -52,7 +58,6 @@ class CategoryViewController: UITableViewController {
 
         categoryArray = realm.objects(Category.self)
         
-        
         tableView.reloadData()
     }
     
@@ -71,6 +76,7 @@ class CategoryViewController: UITableViewController {
             let newCategory = Category()
             
             newCategory.name = categoryName.text!
+            newCategory.colour = UIColor.randomFlat.hexValue()
             
             self.storeData(category: newCategory)
             self.tableView.reloadData()
@@ -97,4 +103,19 @@ class CategoryViewController: UITableViewController {
         
     }
    
+    // MARKS - Delete action
+    override func deleteAction(indexPath: IndexPath) {
+        if let categoryForDelettion = self.categoryArray?[indexPath.row]{
+            do{
+                try self.realm.write {
+                    self.realm.delete(categoryForDelettion)
+                }
+            } catch{
+                print("Something wrong as deleting category: \(error)")
+            }
+        }
+    
+    }
+
 }
+
